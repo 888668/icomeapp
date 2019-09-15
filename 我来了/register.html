@@ -1,0 +1,119 @@
+<!doctype html>
+<html>
+	<head>
+		<meta charset="utf-8">
+		<title></title>
+		<meta name="viewport" content="width=device-width,initial-scale=1,minimum-scale=1,maximum-scale=1,user-scalable=no" />
+		<link href="css/mui.css" rel="stylesheet" />
+		<script type="text/javascript" src="js/function.js"></script>
+		<script type="text/javascript" src="js/register.js"></script>
+	</head>
+	<body>
+		<script src="js/mui.js"></script>
+		<script type="text/javascript">
+			mui.init()
+			
+			document.addEventListener("plusready",function(){
+				init_access_token()
+				var pic_face=document.getElementById('pic_face')
+				var iconToIndex=document.getElementById('registerToIndex')
+					iconToIndex.addEventListener('tap',function(){
+					plus.webview.getWebviewById('register.html').hide()
+					//plus.webview.getWebviewById('index.html').show()
+					}) 
+				var takephoto=document.getElementById("takephoto")
+				var submit=document.getElementById("submit")
+				submit.addEventListener("tap",function(){
+					var id=document.getElementById('id').value;//学号 
+					var passwd1=document.getElementById('passwd1').value;//密码
+					var passwd2=document.getElementById('passwd2').value;//密码2
+					var name=document.getElementById('name').value; //姓名
+					var data= add(pic_face,id);//得到回传的data
+					if(data!='0'){
+						
+						var jsonobj=JSON.parse(data);
+						if(jsonobj.error_msg=="SUCCESS")//成功加入库
+						{
+								var face_token=jsonobj.result.face_list[0].face_token;
+								var sex
+								if(jsonobj.result.face_list[0].gender.type=='male')sex='1';
+								else sex='0';
+								//alert(jsonobj.result.face_token);
+								var checkres=checkmessage(id,passwd1,passwd2,name,face_token,sex);
+								if(checkres=='1')
+								{
+									sentregister(id,passwd1,name,face_token,sex); 
+								}
+								else alert(checkres)
+								
+								//向服务器传送...哈哈哈 
+								//sentregister(id,passwd1,name,jsonobj.result.face_token,'0');
+							
+						}
+						else alert(jsonobj.error_msg);
+						
+						
+					}
+					else{
+						alert('ajax错误')
+					}
+					
+					
+				})
+				takephoto.addEventListener("tap",function(){
+					var cmr=plus.camera.getCamera()
+					var res = cmr.supportedImageResolutions[0];
+					var fmt = cmr.supportedImageFormats[0];
+					cmr.captureImage( function( path ){
+						plus.zip.compressImage( {
+						src:path,
+						dst:path,
+						overwrite:true,
+						quality:50,
+						//rotate:90
+						}, function(event){
+						var _src=event.target;
+						//alert(_src) //输出图片路径
+						pic_face.src=_src
+						takephoto.innerHTML="重新拍照"
+						submit.style.display=""
+						//console.log(event.size)
+						}, function(err){}   );
+						},
+						function( error ) {alert( "Capture image failed: " + error.message );},{resolution:res,format:fmt}
+						);
+				})
+			})
+		</script>
+		<span style="font-size: 300%;" id="registerToIndex" class="mui-icon mui-icon-undo"></span>
+		<form class="mui-input-group">
+    <div class="mui-input-row">
+        <label>学号</label>
+    <input type="text" id='id'class="mui-input-clear" placeholder="请输入学号">
+    </div>
+    <div class="mui-input-row">
+        <label>密码</label>
+        <input type="password" id='passwd1' class="mui-input-password" placeholder="请输入密码">
+    </div>
+	<div class="mui-input-row">
+	    <label>确认密码</label>
+	    <input type="password" id='passwd2' class="mui-input-password" placeholder="请输入上一行的密码">
+	</div>
+	
+	<div class="mui-input-row">
+	    <label>真实姓名</label>
+	<input type="text" id='name' class="mui-input-clear" placeholder="请输入姓名">
+	</div>
+	
+    <div class="mui-button-row">
+        <button type="button" id="takephoto" class="mui-btn mui-btn-primary" >拍照</button>
+        <button type="button" id="submit" class="mui-btn mui-btn-primary" style="display: none;" >确认提交</button>
+    </div>
+</form>
+
+	<div style="text-align:center">
+		<img src="picture/yangmi.jpg" id="pic_face" style="width:250px;" />
+	</div>
+	</body>
+
+</html>
